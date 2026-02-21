@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>NETRUNNER OS // AKIRA</title>
+    <style>
+        body { background: #050505; color: #00ff41; font-family: 'Courier New', monospace; overflow: hidden; margin: 0; }
+        #terminal { padding: 20px; height: 90vh; overflow-y: auto; text-shadow: 0 0 5px #00ff41; }
+        #input-line { display: flex; padding: 10px 20px; background: #000; border-top: 1px solid #00ff41; }
+        input { background: transparent; border: none; color: #00ff41; flex: 1; outline: none; font-family: inherit; font-size: 1.1rem; }
+        .prompt { color: #ff0055; margin-right: 10px; font-weight: bold; }
+        .scanline { width: 100%; height: 2px; background: rgba(0, 255, 65, 0.1); position: absolute; top: 0; animation: scan 4s linear infinite; }
+        @keyframes scan { from { top: 0; } to { top: 100%; } }
+    </style>
+</head>
+<body>
+    <div class="scanline"></div>
+    <div id="terminal">
+        <div>[!] NETRUNNER OS v1.0 ONLINE</div>
+        <div>[!] CONNECTION TO CORE: ESTABLISHED (PORT 5000)</div>
+        <div>------------------------------------------</div>
+    </div>
+    <div id="input-line">
+        <span class="prompt">[Akira@Netrunner]:~#</span>
+        <input type="text" id="cmd-input" autofocus>
+    </div>
+
+    <script>
+        const input = document.getElementById('cmd-input');
+        const term = document.getElementById('terminal');
+
+        input.addEventListener('keydown', async (e) => {
+            if (e.key === 'Enter') {
+                const cmd = input.value;
+                input.value = '';
+                appendLine('\n[Akira@Netrunner]:~# ' + cmd);
+
+                try {
+                    const res = await fetch('http://127.0.0.1:5000/api/shell', {
+                        method: 'POST',
+                        headers: { 
+                            'Content-Type': 'application/json',
+                            'Authorization': 'AKIRA_OMEGA_99' 
+                        },
+                        body: JSON.stringify({ command: cmd })
+                    });
+                    const data = await res.json();
+                    if (data.stdout) appendLine(data.stdout);
+                    if (data.stderr) appendLine('ERR: ' + data.stderr);
+                } catch (err) {
+                    appendLine('SYSTEM CRITICAL: Core Link Lost.');
+                }
+            }
+        });
+
+        function appendLine(text) {
+            const div = document.createElement('div');
+            div.innerText = text;
+            term.appendChild(div);
+            term.scrollTop = term.scrollHeight;
+        }
+    </script>
+</body>
+</html>
